@@ -43,7 +43,9 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/").permitAll()                  // Allow root endpoint
+                        .requestMatchers("/api/auth/**").permitAll()       // Allow auth endpoints
+                        .requestMatchers("/api/health").permitAll()        // Allow health check endpoint
                         .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("/error").permitAll()
                         .anyRequest().authenticated()
@@ -52,6 +54,7 @@ public class SecurityConfig {
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
+        // Disable frame options to allow H2 console
         http.headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable()));
 
         return http.build();
@@ -64,12 +67,13 @@ public class SecurityConfig {
         // Allow CodeSandbox domains and localhost
         configuration.setAllowedOriginPatterns(Arrays.asList(
             "http://localhost:3000",
-            "https://*.codesandbox.io",  // Allows all CodeSandbox subdomains
-            "https://*.csb.app"          // Allows all CodeSandbox app domains
+            "https://*.codesandbox.io",  
+            "https://*.csb.app",
+            "https://*.vercel.app"        // Added Vercel domains for frontend deployment
         ));
         
         configuration.setAllowedMethods(Arrays.asList(
-            "GET", "POST", "PUT", "DELETE", "OPTIONS"
+            "GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"
         ));
         
         configuration.setAllowedHeaders(Arrays.asList(
